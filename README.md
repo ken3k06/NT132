@@ -1,5 +1,7 @@
 # NT132
-
+## Note
+- https://viblo.asia/p/docker-mot-so-huong-dan-va-vi-du-huu-ich-ve-cach-su-dung-volume-trong-docker-L4x5xVDYZBM
+- 
 ## MongoDB
 
 MongoDB là một cơ sở dữ liệu mã nguồn mở và là cơ sở dữ liệu NoSQL
