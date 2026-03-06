@@ -322,3 +322,102 @@ sudo docker stop mongodb && sudo docker start mongodb
 ```
 
 Tiếp theo mình sẽ thử connect tới MongoDB thông qua python. 
+
+Ở đây mình sẽ sử dụng thư viện `pymongo` để làm việc này. 
+Doc của MongoDB: [pymongo](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/)
+
+```python
+from pymongo import MongoClient
+uri = "mongodb://127.0.0.1:27017/"
+
+client = MongoClient(uri)
+try: 
+    print(client.list_database_names())
+except Exception as e:
+    print(e)
+```
+
+## Replica Set 
+Một replica set trong MongoDB là một nhóm các tiến trình của MongoDB duy trì cùng một bộ dữ liệu. Các replica set cung cấp tính dự phòng và sẵn sàng cao và là cơ sở để triển khai các cluster MongoDB. 
+
+
+<img src="{{ '/assets/images/mongo/replica.png' | relative_url }}" 
+  alt="..." 
+  width="600">
+
+
+Một replica set tiêu chuẩn thường có ít nhất 3 node như sau: 
+
+- Một primary node: node này sẽ nhận tất cả các hoạt động ghi và đọc mặc định. Mỗi replica set chỉ có một primary node duy nhất tại một thời điểm. 
+- Một secondary node : thực hiện sao phép dữ liệu từ primary node thông qua các thao tác từ oplog. Primary node sẽ ghi lại tất cả các thay đổi vào một bản nhật kí gọi là oplog. 
+- Một arbiter node: node này không lưu trữ dữ liệu và không tham gia vào quá trình sao chép dữ liệu. Arbiter node chỉ có nhiệm vụ tham gia vào quá trình bầu cử khi primary node gặp sự cố để đảm bảo rằng replica set luôn có một primary node hoạt động.
+
+<img src="{{ '/assets/images/mongo/heartbeat.png' | relative_url }}" 
+  alt="..." 
+  width="600">
+
+
+Mỗi node trong replica set sẽ chỉ thuộc về đúng replica set đó và không thể tham gia vào replica set khác. 
+
+Khi node primary gặp sự cố, các node secondary sẽ nhận thấy thông qua cơ chế heartbeat và sẽ tiến hành bầu cử để chọn ra một node secondary mới trở thành primary. Quá trình này đảm bảo rằng hệ thống vẫn có thể tiếp tục hoạt động mà không bị gián đoạn.
+
+
+
+<img src="{{ '/assets/images/mongo/voting.png' | relative_url }}" 
+  alt="..." 
+  width="600">
+
+Node gặp sự cố sau khi được phục hồi trở lại sẽ trở thành một secondary node tham gia vào replica set này. 
+
+Bây giờ ta sẽ thử triển khai một replica set đơn giản với 3 node bằng docker compose. Tham khảo thêm tại [đây](https://www.mongodb.com/resources/products/capabilities/replication)
+
+
+Cấu trúc file docker-compose.yml như sau:
+```
+version: "3.8"
+
+services: 
+  mongo1:
+    image: mongo:latest
+    container_name: mongo1 
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports: 
+      - "27017:27017"
+    volumes: 
+      - mongo1_data:/data/db
+    networks:
+      - mongo-cluster 
+  mongo2: 
+    image: mongo:latest
+    container_name: mongo2 
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports: 
+      - "27018:27017"
+    volumes: 
+      - mongo2_data:/data/db
+    networks:
+      - mongo-cluster
+  mongo3:
+    image: mongo:latest
+    container_name: mongo3 
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    ports: 
+      - "27019:27017"
+    volumes: 
+      - mongo3_data:/data/db
+    networks:
+      - mongo-cluster
+volumes: 
+  mongo1_data:
+  mongo2_data:
+  mongo3_data: 
+networks:
+  mongo-cluster:
+    driver: bridge
+```
+
+Sau khi chạy `docker-compose up -d` thì ta đã có 3 node MongoDB chạy ngầm trên máy. Tiếp theo ta sẽ vào mongosh của node mongo1 để cấu hình replica set. 
+```
+
+```
+
