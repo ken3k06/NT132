@@ -417,7 +417,39 @@ networks:
 ```
 
 Sau khi chạy `docker-compose up -d` thì ta đã có 3 node MongoDB chạy ngầm trên máy. Tiếp theo ta sẽ vào mongosh của node mongo1 để cấu hình replica set. 
+
+Tạo một file `init-rs.js` với nội dung như sau: 
+```
+rs.initiate({
+  _id: "rs0",
+  members: [
+    { _id: 0, host: "mongo1:27017" },
+    { _id: 1, host: "mongo2:27017" },
+    { _id: 2, host: "mongo3:27017" }
+  ]
+})
+
+rs.status()
+```
+Sau đó chạy lệnh sau để vào mongosh của node mongo1 và chạy file `init-rs.js` này: 
+```
+docker exec -i mongo1 mongosh < init-rs.js
+```
+
+Tiếp theo ta vào mongosh bất kì để kiểm tra
+```
+rs.status()
+```
+thì sẽ thấy có một node được đặt làm primary còn hai node còn lại là secondary. 
+
 ```
 
 ```
+
+Test đồng bộ: 
+
+<img width="890" height="367" alt="image" src="https://github.com/user-attachments/assets/83c0bda6-4cce-4bcf-a335-9a5bd6fc72ff" />
+
+<img width="1071" height="165" alt="image" src="https://github.com/user-attachments/assets/7058438d-cd5a-4c27-be7b-10796b3a5300" />
+
 
